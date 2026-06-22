@@ -13,7 +13,7 @@ Download the latest release and run it. It will automatically switch between Ocu
 Use pyinstaller (``pip install pyinstaller``) :
 
 ```bash
-pyinstaller --onefile --uac-admin --add-data "ODTKRA.exe;." main.py
+pyinstaller --onefile --uac-admin --add-data "ODTKRA.exe;." --name "OculusDash-ODTKRA Switcher" main.py
 ```
 
 ## Attribution

@@ -1,6 +1,6 @@
 # OculusDash-ODTKRA_Switcher
 
-This tool lets you easely switch between the original Oculus Dash and ODTKRA.
+This tool lets you easely switch between the original Oculus Dash and [ODTKRA](https://github.com/nicolas-riera/ODTKRA).
 
 I made this tool as I need sometimes the original Oculus Dash to set the floor level and it was annoying to do it manually.
 

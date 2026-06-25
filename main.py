@@ -5,6 +5,8 @@ import ctypes
 import subprocess
 import time
 
+isServicestopped = False
+
 def is_admin():
     try:
         return ctypes.windll.shell32.IsUserAnAdmin()
@@ -18,11 +20,13 @@ def check_and_stop_service(service_name):
             print(f"[INFO] {service_name} is running. Attempting to stop it...")
             subprocess.run(["sc", "stop", service_name], capture_output=True, text=True, check=True)
             
-            for _ in range(10):
+            for _ in range(20):
                 time.sleep(1)
                 check = subprocess.run(["sc", "query", service_name], capture_output=True, text=True, check=True)
                 if "STOPPED" in check.stdout:
                     print(f"[SUCCESS] {service_name} has been stopped.")
+                    global isServicestopped
+                    isServicestopped = True
                     return True
             print(f"[ERROR] Timed out waiting for {service_name} to stop.")
             return False
@@ -31,6 +35,14 @@ def check_and_stop_service(service_name):
     except subprocess.CalledProcessError:
         print(f"[WARNING] Could not query or stop {service_name}. It might not be installed.")
         return True
+
+def start_service(service_name):
+    try:
+        print(f"[INFO] Attempting to restart {service_name}...")
+        subprocess.run(["sc", "start", service_name], capture_output=True, text=True, check=True)
+        print(f"[SUCCESS] {service_name} start command sent.")
+    except subprocess.CalledProcessError:
+        print(f"[ERROR] Failed to start {service_name}.")
 
 def main():
     if not is_admin():
@@ -54,6 +66,8 @@ def main():
 
     if not os.path.exists(dash_path):
         print(f"[ERROR] OculusDash.exe not found in {target_dir}")
+        if isServicestopped:
+            start_service("OVRService")
         input("\nYou can now close the program.")
         sys.exit(1)
 
@@ -68,31 +82,34 @@ def main():
             
             if not os.path.exists(odtkra_source):
                 print(f"[ERROR] Source ODTKRA.exe not found at {odtkra_source}")
+                if isServicestopped:
+                    start_service("OVRService")
                 input("\nYou can now close the program.")
                 sys.exit(1)
                 
             shutil.copy2(odtkra_source, dash_path)
             print("[SUCCESS] ODTKRA.exe successfully installed as OculusDash.exe.")
-            input("\nYou can now close the program.")
         except Exception as e:
             print(f"[ERROR] An error occurred during the swap: {e}")
-            input("\nYou can now close the program.")
-            sys.exit(1)
     else:
         print("[INFO] ODTKRA detected. Restoring original OculusDash...")
         if not os.path.exists(bak_path):
             print("[ERROR] Backup file (OculusDash_bak.exe) not found. Cannot restore.")
+            if isServicestopped:
+                start_service("OVRService")
             input("\nYou can now close the program.")
             sys.exit(1)
         try:
             os.remove(dash_path)
             os.rename(bak_path, dash_path)
             print("[SUCCESS] Original OculusDash.exe successfully restored.")
-            input("\nYou can now close the program.")
         except Exception as e:
             print(f"[ERROR] An error occurred during the restoration: {e}")
-            input("\nYou can now close the program.")
-            sys.exit(1)
+
+    if isServicestopped:
+        start_service("OVRService")
+
+    input("\nYou can now close the program.")
 
 if __name__ == "__main__":
     main()
